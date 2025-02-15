@@ -1,0 +1,124 @@
+user@arch ~/t/education_software_design (master)> gcc -o integr_v1 integr_v1.c -lm -lrt
+user@arch ~/t/education_software_design (master)> ls
+integr_new*  integr_new.c  integr_v1*  integr_v1.c
+user@arch ~/t/education_software_design (master)> ./integr_v1
+N: 603288758, Время: 11.927110 сек
+N: 723946509, Время: 14.183974 сек
+N: 765596255, Время: 15.003870 сек
+
+Результат:
+Интеграл: 12.0703463164
+Время: 15.003870 сек
+Абс. погрешность: 0.003870 сек
+Отн. погрешность: 0.025796%
+user@arch ~/t/education_software_design (master)> gcc --version
+gcc (GCC) 14.2.1 20240910
+Copyright (C) 2024 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+user@arch ~/t/education_software_design (master)> ls
+integr_new*  integr_new.c  integr_v1*  integr_v1.c
+user@arch ~/t/education_software_design (master)> cat integr_v1.c
+#include <stdio.h>
+#include <math.h>
+#include <time.h>
+
+#define TARGET_TIME 15.0
+#define TOLERANCE 0.01  // 1% относительная погрешность
+
+double f(double x) {
+    return exp(x) * sin(x);
+}
+
+double trapezoidal_integral(double a, double b, int N) {
+    double h = (b - a) / N;
+    double sum = 0.5 * (f(a) + f(b));
+
+    for (int k = 1; k < N; k++) {
+        double xk = a + k * h;
+        sum += f(xk);
+    }
+    return h * sum;
+}
+
+int main() {
+    double a = 0.0, b = M_PI;
+    int N = 603288758;
+    double elapsed_time = 0.0;
+    struct timespec start, end;
+
+    while (1) {
+        clock_gettime(CLOCK_MONOTONIC, &start);
+        double result = trapezoidal_integral(a, b, N);
+        clock_gettime(CLOCK_MONOTONIC, &end);
+
+        elapsed_time = (end.tv_sec - start.tv_sec) +
+                      (end.tv_nsec - start.tv_nsec) / 1e9;
+
+        printf("N: %d, Время: %.6f сек\n", N, elapsed_time);
+
+        // Проверяем два условия: время ≥ 15 сек И погрешность ≤ 1%
+        if (elapsed_time >= TARGET_TIME) {
+            double abs_error = elapsed_time - TARGET_TIME;
+            double rel_error = fabs(abs_error / elapsed_time) * 100.0;
+
+            if (rel_error <= TOLERANCE * 100.0) {
+                printf("\nРезультат:\n");
+                printf("Интеграл: %.10f\n", result);
+                printf("Время: %.6f сек\n", elapsed_time);
+                printf("Абс. погрешность: %.6f сек\n", abs_error);
+                printf("Отн. погрешность: %.6f%%\n", rel_error);
+                break;
+            }
+        }
+
+        // Корректируем N
+        double scale_factor = TARGET_TIME / elapsed_time;
+        scale_factor = fmin(fmax(scale_factor, 0.8), 1.2);  // Ограничение 0.8-1.2
+        N = (int)(N * scale_factor);
+    }
+
+    return 0;
+}
+user@arch ~/t/education_software_design (master)> ls
+integr_new*  integr_new.c  integr_v1*  integr_v1.c
+user@arch ~/t/education_software_design (master)> gcc -o integr_v1_O0 integr_v1.c -O0 -lm
+user@arch ~/t/education_software_design (master)> gcc -o integr_v1_O1 integr_v1.c -O1 -lm
+                                                  gcc -o integr_v1_O2 integr_v1.c -O2 -lm
+                                                  gcc -o integr_v1_O3 integr_v1.c -O3 -lm
+                                                  gcc -o integr_v1_Os integr_v1.c -Os -lm
+                                                  gcc -o integr_v1_Ofast integr_v1.c -Ofast -lm
+                                                  gcc -o integr_v1_Og integr_v1.c -Og -lm
+                                                  gcc -o integr_v1_Oz integr_v1.c -Oz -lm
+user@arch ~/t/education_software_design (master)> ls
+integr_new*   integr_v1*   integr_v1_O0*  integr_v1_O2*  integr_v1_Ofast*  integr_v1_Os*
+integr_new.c  integr_v1.c  integr_v1_O1*  integr_v1_O3*  integr_v1_Og*     integr_v1_Oz*
+user@arch ~/t/education_software_design (master)> ./integr_v1_O0
+N: 603288758, Время: 11.000343 сек
+N: 723946509, Время: 11.540755 сек
+N: 868735810, Время: 13.867199 сек
+N: 939702176, Время: 15.001955 сек
+
+Результат:
+Интеграл: 12.0703463163
+Время: 15.001955 сек
+Абс. погрешность: 0.001955 сек
+Отн. погрешность: 0.013031%
+user@arch ~/t/education_software_design (master)> ./integr_v1_Ofast
+N: 603288758, Время: 5.316448 сек
+N: 723946509, Время: 6.170334 сек
+N: 868735810, Время: 7.376719 сек
+N: 1042482972, Время: 8.869256 сек
+N: 1250979566, Время: 9.484470 сек
+N: 1501175479, Время: 10.898026 сек
+N: 1801410574, Время: 13.078722 сек
+N: 2066039601, Время: 14.992546 сек
+N: 2067066729, Время: 15.009931 сек
+
+Результат:
+Интеграл: 12.0703463164
+Время: 15.009931 сек
+Абс. погрешность: 0.009931 сек
+Отн. погрешность: 0.066165%
+user@arch ~/t/education_software_design (master)>
